@@ -1,0 +1,279 @@
+https://blog.csdn.net/wangshubo1989/article/details/48131537
+1. 概要 
+sizeof是C/C++中的一个操作符（operator），作用就是返回一个对象或者类型所占的内存字节数。返回值类型为size_t，在头文件stddef.h中定义.
+
+这是一个依赖于编译系统的值，一般定义为typedef unsigned int size_t;编译器林林总总，但作为一个规范，都会保证char、signed char和unsigned char的sizeof值为1，毕竟char是编程能用的最小数据类型。
+
+MSDN上的解释为： 
+The sizeof keyword gives the amount of storage, in bytes, associated with avariable or a type (including aggregate types). This keyword returns a value of type size_t.
+
+2. 语法 
+sizeof有三种语法形式，如下： 
+1) sizeof( object ); // sizeof( 对象 ); 
+2) sizeof( type_name ); // sizeof( 类型 ); 
+3) sizeof object; // sizeof 对象;
+
+3. 基本类型的sizeof 
+这里的基本数据类型是指short、int、long、float、double这样的简单内置数据类型。 
+由于它们的内存大小是和系统相关的，所以在不同的系统下取值可能不同。
+
+4. 结构体的sizeof 
+结构体的sizeof涉及到对齐问题。 
+测试代码：
+
+#include
+using namespace std;
+int main()
+{
+    struct A
+{
+char a;
+    int b;
+};
+struct B 
+{ 
+    int b; 
+    char *P; 
+}; 
+struct C 
+{ 
+}; 
+struct D 
+{ 
+    int a; 
+    char c; 
+    double d; 
+}; 
+struct E 
+{ 
+    char * p; 
+}; 
+cout << "A: " << sizeof A << endl; 
+cout << "B: " << sizeof B << endl; 
+cout << "C: " << sizeof C << endl; 
+cout << "D: " << sizeof D << endl; 
+cout << "E: " << sizeof E << endl; 
+return 0; 
+}
+//输出结果：
+A: 8
+B: 8
+C: 1
+D: 16
+E: 4
+
+为什么需要字节对齐？计算机组成原理教导我们这样有助于加快计算机的取数速度，否则就得多花指令周期了。为此，编译器默认会对结构体进行处理（实际上其它地方的数据变量也是如此），让宽度为2的基本数据类型（short等）都位于能被2整除的地址上，让宽度为4的基本数据类型（int等）都位于能被4整除的地址上，依次类推。这样，两个数中间就可能需要加入填充字节，所以整个结构体的sizeof值就增长了。 
+字节对齐的细节和编译器的实现相关，但一般而言，满足三个准则： 
+1） 结构体变量的首地址能够被其最宽基本类型成员的大小所整除。 
+2） 结构体的每个成员相对于结构体首地址的偏移量（offset）都是成员大小的整数倍，如有需要，编译器会在成员之间加上填充字节（internal adding）。 
+3） 结构体的总大小为结构体最宽基本类型成员大小的整数倍，如有需要，编译器会在最末一个成员后加上填充字节（trailing padding）。
+
+注意：空结构体（不含数据成员）的sizeof值为1。试想一个“不占空间“的变量如何被取地址、两个不同的“空结构体”变量又如何得以区分呢，于是，“空结构体”变量也得被存储，这样编译器也就只能为其分配一个字节的空间用于占位了。 
+5. 联合的sizeof 
+结构体在内存组织上市顺序式的，联合体则是重叠式，各成员共享一段内存；所以整个联合体的sizeof也就是每个成员sizeof的最大值。 
+例子：
+
+#include <iostream>
+using namespace std; 
+int main() 
+{ 
+    union u 
+    { 
+        int a; 
+        float b; 
+        double c; 
+        char d; 
+}; 
+    cout << "U: " << sizeof u << endl; 
+    return 0; 
+}
+
+结果 U: 8
+
+6. 数组的sizeof 
+数组的sizeof值等于数组所占用的内存字节数。 
+注意： 
+1）当字符数组表示字符串时，其sizeof值将’/0’计算进去。 
+2）当数组为形参时，其sizeof值相当于指针的sizeof值。
+
+#include<iostream>
+using namespace std; 
+int main() 
+{ 
+    char a[10]; 
+    cout << "char a[10] " << sizeof(a)<<endl;
+    cout << "char n[] " << sizeof(n) << endl;
+}
+输出：
+char a[10] 10
+char n[]  4
+
+7. 指针的sizeof 
+指针是用来记录另一个对象的地址，所以指针的内存大小当然就等于计算机内部地址总线的宽度。 
+在32位计算机中，一个指针变量的返回值必定是4。 
+指针变量的sizeof值与指针所指的对象没有任何关系。 
+8. 函数的sizeof 
+sizeof也可对一个函数调用求值，其结果是函数返回值类型的大小，函数并不会被调用。 
+对函数求值的形式：sizeof(函数名(实参表)) 
+注意： 
+1）不可以对返回值类型为空的函数求值。 
+2）不可以对函数名求值。 
+3）对有参数的函数，在用sizeof时，须写上实参表。
+
+#include<iostream> 
+using namespace std; 
+float FuncP(int a, float b) 
+{ 
+    return a + b; 
+} 
+int FuncNP() 
+{ return 3; } 
+void Func() 
+{ } 
+int main() 
+{ 
+cout<<sizeof(FuncP(3, 0.4))<<endl; //OK，值为4，sizeof(FuncP(3,0.4))相当于sizeof(float) cout<<sizeof(FuncNP())<<endl; //OK，值为4，sizeof(FuncNP())相当于sizeof(int) cout<<sizeof(Func())<<endl; //error，sizeof不能对返回值为空类型的函数求值 cout@sizeof(FuncNP)<<endl; //error，sizeof不能对函数名求值 }
+
+输出： 
+4 
+4 
+9. 类的sizeof 
+重头戏出场了！ 
+在C++中有很多因素影响着类对象的大小，影响因素有： 
+1.非静态数据成员的大小 
+2.数据成员的顺序 
+3.字节校正和对齐 
+4.基类的大小 
+5.是否存在虚函数 
+6.使用的编译器 
+7.继承模型，是否是虚继承
+
+#include<iostream> 
+using namespace std; 
+class A 
+{ 
+private: 
+    float iMem1; 
+    const int iMem2; 
+    static int iMem3; 
+    char iMem; 
+}; 
+int main() 
+{ 
+    cout << "A: "<< sizeof(A)<< endl; 
+    return 0; 
+    }
+
+输出： 
+A:12 
+分析：12=sizeof(float)+sizeof(int)+sizeof(char)（对齐，所以为4） 
+由此可见，静态成员不是类的一部分
+
+#include<iostream> 
+using namespace std; 
+class B 
+{ 
+    char c; 
+    int int1; 
+    int int2; 
+    int i; 
+    long l; 
+    short s; 
+}; 
+class C 
+{ 
+    int int1; 
+    int int2; 
+    int i; 
+    long l; 
+    short s; 
+    char c; 
+}; 
+int main() 
+{ 
+    cout << "B: "<< sizeof(B)<< endl; 
+    cout << "C: "<< sizeof(C)<< endl; 
+    return 0; 
+}
+
+输出 
+B: 24 
+C: 20 
+由上可见，数据成员的顺序以及对齐方式对类大小的影响。
+
+#include<iostream> 
+using namespace std; 
+class B 
+{ 
+    int iMem1; 
+    int iMem2; 
+}; 
+class D:public B 
+{ 
+    int iMem; 
+}; 
+int main() 
+{ 
+    cout << "D: "<< sizeof(D)<< endl; 
+    return 0; 
+}
+
+输出 
+D:12 
+由此可见，子类的大小受到父类大小的影响
+
+#include<iostream> 
+using namespace std; 
+class Base 
+{ 
+public: 
+    virtual void SomeFunction(); 
+private: 
+    int iAMem; 
+}; 
+class DerivedWithoutVirtual : public Base 
+{ private: 
+int iBMem ; 
+}; 
+class Derived : public Base 
+{ 
+virtual void SomeOtherFunction(); 
+private: int iBMem ; 
+}; 
+int main() 
+{ 
+cout << "DerivedWithoutVirtual: "<< sizeof(DerivedWithoutVirtual)<< endl; 
+cout << "Derived: "<< sizeof(Derived)<< endl; 
+return 0; }
+
+DerivedWithoutVirtual: 12 
+Derived: 12 
+由此可见，类中虚函数将会增加4个字节。但是需要注意的是，如果父类有虚函数，子类也有虚函数，子类的大小不包括父类的虚函数的大小！！
+
+#include<iostream> 
+using namespace std; 
+class ABase 
+{ int iMem; }; 
+class BBase : public virtual ABase { int iBMem ; }; 
+class CBase : public virtual ABase { int iBMem ; }; 
+class ABCDerived: public BBase, public CBase { int iMem; }; 
+int main() 
+{ 
+    cout << "ABase: "<< sizeof(ABase)<< endl; 
+    cout << "BBase: "<< sizeof(BBase)<< endl; 
+    cout << "CBase: "<< sizeof(CBase)<< endl;
+    cout << "ABCDerived: "<< sizeof(ABCDerived)<< endl; 
+    return 0; 
+}
+
+ABase: 4 
+BBase: 12 
+CBase: 12 
+ABCDerived: 24 
+由此可见： 
+ABCDerived 的大小为 24 不是28 = sizeof (BBase + CBase + int member)) 
+大小为24，因为它只有一个虚基类指针；
+
+综上所述： 
+1. 通常情况下，虚函数的一搬继承中，不在计算基类中虚函数的大小，以为一个类中只有一个虚函数表； 
+2. 虚继承相对就比较复杂一些，虚继承中的问题主要是，当前基类的大小，加上现在类的大小，同时还要加上一个虚指针，这个虚指针式指向虚函数的，所以相当于额外加上4，但是还要遵循第一个的条件，一个函数中只能有一个虚指针，一个虚指针表，所以在计算时要注意，每一个函数都只有一个自己的虚指针！
