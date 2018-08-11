@@ -1,0 +1,454 @@
+//https://blog.csdn.net/c20182030/article/details/69667965
+//写得不错，深入浅出，但同时也导致一些不严谨的地方，例如对于 .begin() 的解释，这个可以配合菜鸟教程一起理解
+
+一、引入
+
+
+
+引入：略
+
+
+
+vector收录在STL里，是一种特殊的数据结构。它的中文名字叫做“动态数组”或者“不定长数组”，有时也被翻译成“容器”。
+
+说白了，vector就是一个功能强大的数组。下面让我们来体验它强大的功能吧！
+
+
+
+
+
+二、vector的头文件
+
+
+
+vector收录在std库里，所以调用vector需要
+
+#include<vector>
+
+using namespace std;
+
+这两个头文件。
+
+
+
+
+
+三、vector的声明与构造函数
+
+
+
+既然是“动态数组”，vector是一个什么数组呢，int？double？或者结构体数组？
+
+我们可以这样声明一个vector：
+
+vector <数据类型> 动态数组名;
+
+比如：
+
+vector <int> i;//一个int的动态数组
+
+vector <char> c;//一个char的动态数组
+
+vector <node> n;//一个node的动态数组（node是结构体名）
+
+
+
+如果你想赋初值，你可以：
+
+vector <int> M(a,b);//在M里装a个b
+
+vector <int> N(a); //在N里装a个0
+
+
+
+当然你也可以：
+
+vector <int> A;
+
+vector <int> B(A);//一个和A一模一样的动态数组
+
+vector <int> C(B.begin()+l,B.end()-r);//继承B动态数组下标[l,B.end()-r)的值，注意，下标从0开始，begin()，end()，size()三个函数见下文
+
+
+
+四、vector的析构函数
+
+
+
+很简单，你可以vector <A> B;//A是某种数据结构，B是动态数组名
+
+如果你想析构它，只需调用B.~vector<A>(); 即可。
+
+也就是说，vector的析构函数是：动态数组名.~vector<该数组的数据结构>();
+
+
+
+
+
+五、vector的基本操作
+
+
+
+以vector <int> v为例：
+
+① v[i]或v.at(i)//返回v[i]的值
+
+② v.size();//返回v数组元素总个数
+
+③ v.front();//返回v数组第一个元素的值
+
+④ v.back();//返回v数组最后一个元素的值
+
+⑤ v.clear();//清空v数组
+
+⑥ v.begin();//返回v数组第一个数的下标
+
+⑦ v.end();//返回v数组最后一个数的下标
+
+⑧ v.empty();//判断v数组是否为空，是空则返回1(true)，非空（有元素）则返回0(false)
+
+⑨ v.swap(v1);//v1是另一个动态数组，将v和v1元素互换
+
+⑩ swap(v,v1);//同⑨
+
+注意：再次重申，vector的下标是从0开始的！
+
+注意：除v[i]外，其余都是vector的自带函数，因此必须添上括号！
+
+
+
+
+
+五、vector的插入
+
+
+
+std库提供了好几种插入，这里讲最为常用的三种。
+
+① v.push_back(a);//在v数组的尾部插入数a
+
+比如：
+
+有一个动态数组x:2017 2333
+
+调用x.push_back(666);
+
+则x:2017 2333 666
+
+② v.insert(v.begin()+k,a);//在下标k的前面插入数a，k之后的数依次后退一位
+
+//记住，下标是从0开始的！
+
+比如：
+
+动态数组x:1 2 3 4 5 6 
+
+调用x.insert(x.begin()+2,100);
+
+则x:1 2 100 3 4 5 6 
+
+③ x.insert(x.begin()+k,p,a);//在下标k前面插入p个a
+
+
+
+六、vector的删除
+
+
+
+也有三种，
+
+① v.pop_back()//删除最后一个元素
+
+② v.erase(v.begin()+k);//删除下标为k的数，返回下一个位置的下标
+
+③ v.erase(v.begin()+l,v.end()-r);//删除下标[l,v.end()-r)的元素
+
+
+
+七、vector的内存机制
+
+
+
+vector能装多少个元素呢？它的长度是多长呢？接下来就要简单地介绍一下vector的内存机制。
+
+先介绍几个函数吧：
+
+
+
+v.capacity();//返回v数组的长度，就相当于int v[20000];的20000
+
+v.resize(k);//将v数组的长度设为k
+
+
+
+现在让我们来研究一下vector的内存机制。
+
+
+#include<cstdio>
+#include<vector>
+#include<algorithm>
+using namespace std;
+const unsigned int maxn=2147483647;
+vector <unsigned int> v;
+int main()
+{
+	//printf("%d\n",v.capacity());
+	//v.resize(1000);
+	unsigned int last=v.capacity();
+	printf("%d\n",last);
+	for(unsigned int i=1;i<=maxn;i++)
+	{
+		v.push_back(i);
+		unsigned int a=v.capacity();
+		if(a!=last)
+		{
+			printf("%d\n",a);
+			last=a;
+		}
+	}
+}
+
+
+这个验证程序测试了vector的长度上限，现在让我们来看看输出结果：
+
+0
+1
+2
+4
+8
+16
+32
+64
+128
+256
+512
+1024
+2048
+4096
+8192
+16384
+32768
+65536
+131072
+262144
+524288
+1048576
+2097152
+4194304
+8388608
+16777216
+33554432
+67108864
+134217728
+
+
+This application has requested the Runtime to terminate it in an unusual way.
+Please contact the application's support team for more information.
+
+
+
+最后程序输出了这一行英文，然后就会崩溃。这句话的大概意思是：程序运行时申请以某种非正常的方式结束它，请联系开发团队以取得更多信息。
+
+
+
+（也就是说，我们把vector玩爆了。）
+
+
+
+我们来看看它的规律，我们可以发现，每一次，它的内存都翻了一倍！！
+
+我们再来看看它什么时候翻倍。
+
+在printf("%d\n",a);时，再输出此时的v.size();
+
+此时的程序：
+
+
+#include<cstdio>
+#include<vector>
+#include<algorithm>
+using namespace std;
+const unsigned int maxn=2147483647;
+vector <unsigned int> v;
+int main()
+{
+	//printf("%d\n",v.capacity());
+	//v.resize(1000);
+	unsigned int last=v.capacity();
+	printf("%d\n",last);
+	for(unsigned int i=1;i<=maxn;i++)
+	{
+		v.push_back(i);
+		unsigned int a=v.capacity();
+		if(a!=last)
+		{
+			printf("size()=%d -> capacity()=%d\n",v.size(),a);
+			last=a;
+		}
+	}
+}
+
+
+
+
+此时的输出结果：
+
+
+
+0
+size()=1 -> capacity()=1
+size()=2 -> capacity()=2
+size()=3 -> capacity()=4
+size()=5 -> capacity()=8
+size()=9 -> capacity()=16
+size()=17 -> capacity()=32
+size()=33 -> capacity()=64
+size()=65 -> capacity()=128
+size()=129 -> capacity()=256
+size()=257 -> capacity()=512
+size()=513 -> capacity()=1024
+size()=1025 -> capacity()=2048
+size()=2049 -> capacity()=4096
+size()=4097 -> capacity()=8192
+size()=8193 -> capacity()=16384
+size()=16385 -> capacity()=32768
+size()=32769 -> capacity()=65536
+size()=65537 -> capacity()=131072
+size()=131073 -> capacity()=262144
+size()=262145 -> capacity()=524288
+size()=524289 -> capacity()=1048576
+size()=1048577 -> capacity()=2097152
+size()=2097153 -> capacity()=4194304
+size()=4194305 -> capacity()=8388608
+size()=8388609 -> capacity()=16777216
+size()=16777217 -> capacity()=33554432
+size()=33554433 -> capacity()=67108864
+size()=67108865 -> capacity()=134217728
+
+
+This application has requested the Runtime to terminate it in an unusual way.
+Please contact the application's support team for more information.
+
+
+
+（结尾还是那句英文。。。。）
+
+
+
+我们可以看到：
+
+设当前v.capacity()=c,v.size()=s;如果s=c+1，那么c就会加倍。
+
+
+
+这是一个初始长度为0的动态数组，接着我们来看看初始长度不为0的情况。
+
+此时代码：
+
+
+#include<cstdio>
+#include<vector>
+#include<algorithm>
+using namespace std;
+const unsigned int maxn=2147483647;
+const unsigned int beg=1250;//这是可修改的
+vector <unsigned int> v;
+int main()
+{
+	v.resize(beg);
+	unsigned int last=v.capacity();
+	printf("At first , capacity() = %d\n",last);
+	for(unsigned int i=1;i<=maxn;i++)
+	{
+		v.push_back(1);
+		unsigned int a=v.capacity();
+		if(a!=last)
+		{
+			printf("size()=%d -> capacity()=%d\n",v.size(),a);
+			last=a;
+		}
+	}
+}
+
+
+
+
+结果（只保留了一部分）：
+
+①
+
+At first , capacity() = 1000
+size()=1001 -> capacity()=2000
+size()=2001 -> capacity()=4000
+size()=4001 -> capacity()=8000
+size()=8001 -> capacity()=16000
+
+
+②
+
+At first , capacity() = 5000
+size()=5001 -> capacity()=10000
+size()=10001 -> capacity()=20000
+size()=20001 -> capacity()=40000
+size()=40001 -> capacity()=80000
+size()=80001 -> capacity()=160000
+
+
+③
+
+At first , capacity() = 2333
+size()=2334 -> capacity()=4666
+size()=4667 -> capacity()=9332
+size()=9333 -> capacity()=18664
+size()=18665 -> capacity()=37328
+size()=37329 -> capacity()=74656
+size()=74657 -> capacity()=149312
+size()=149313 -> capacity()=298624
+size()=298625 -> capacity()=597248
+
+
+
+多次试验后，我们可以得出结论：
+
+当动态数组内的元素比动态数组长度多一时，动态数组长度翻倍！
+
+也就是说：if(v.size()-1==v.capacity()) v.resize(v.capacity()*2);
+
+
+
+而长度翻倍是很花时间的。所以说做题的时候，记得事先把vector的长度拉得足够长，以免运行的时候，vector长度翻倍浪费时间。
+
+
+
+最后一个问题，vector最多能装多少个元素呢？
+
+我们可以用函数：
+
+v.max_size();
+
+来得到。
+
+
+
+下列是一个常用的数据结构对应的max_size();
+
+
+
+bool -> 4294967295
+
+char -> 4294967295
+
+int-> 1073741823
+
+unsigned int -> 1073741823
+
+float -> 1073741823
+
+double-> 536870911
+
+long long -> 536870911
+
+unsigned long long ->536870911
+
+
+
